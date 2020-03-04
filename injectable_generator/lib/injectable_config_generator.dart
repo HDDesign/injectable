@@ -6,8 +6,8 @@ import 'package:glob/glob.dart';
 import 'package:injectable/injectable.dart';
 import 'package:source_gen/source_gen.dart';
 
-import 'config_code_generator.dart';
 import 'dependency_config.dart';
+import 'generator/config_code_generator.dart';
 import 'utils.dart';
 
 const TypeChecker bindChecker = const TypeChecker.fromRuntime(RegisterAs);
@@ -32,13 +32,16 @@ class InjectableConfigGenerator extends GeneratorForAnnotation<InjectableInit> {
   }
 
   void _reportMissingDependencies(List<DependencyConfig> deps) {
+    final typeArgsStripper = RegExp('^([^<]*)');
     final messages = [];
-    final registeredDeps = deps.map((dep) => dep.type).toSet();
+    final registeredDeps =
+        deps.map((dep) => typeArgsStripper.stringMatch(dep.bindTo)).toSet();
     deps.forEach((dep) {
       dep.dependencies.forEach((iDep) {
-        if (!registeredDeps.contains(iDep.type)) {
+        final strippedClassName = typeArgsStripper.stringMatch(iDep.type);
+        if (!registeredDeps.contains(strippedClassName)) {
           messages.add(
-              "[${dep.bindTo}] depends on [${iDep.type}] which is not injectable!");
+              "[${dep.bindTo}] depends on [$strippedClassName] which is not injectable!");
         }
       });
     });

@@ -11,7 +11,10 @@ class DependencyConfig {
   String bindTo;
   String environment;
   String constructorName;
+  bool isAsync;
   RegisterModuleItem moduleConfig;
+
+  bool asInstance;
 
   DependencyConfig();
 
@@ -21,6 +24,8 @@ class DependencyConfig {
     instanceName = json['instanceName'];
     signalsReady = json['signalsReady'];
     constructorName = json['constructorName'] ?? '';
+    isAsync = json['isAsync'] ?? false;
+    asInstance = json['asInstance'] ?? asInstance;
 
     imports = json['imports'].cast<String>();
     if (json['dependencies'] != null) {
@@ -36,9 +41,13 @@ class DependencyConfig {
     environment = json['environment'];
   }
 
+  bool get regsiterAsInstance => isAsync && asInstance;
+
   Map<String, dynamic> toJson() => {
         "type": type,
         "bindTo": bindTo,
+        "isAsync": isAsync,
+        "asInstance": asInstance,
         "injectableType": injectableType,
         "imports": imports.toSet().toList(),
         "dependencies": dependencies.map((v) => v.toJson()).toList(),
@@ -51,7 +60,6 @@ class DependencyConfig {
 
   Set<String> get allImports => {
         ...imports.where((i) => i != null),
-        ...dependencies.map((dep) => dep.import).where((i) => i != null),
         if (moduleConfig != null) moduleConfig.import
       };
 }
@@ -59,27 +67,23 @@ class DependencyConfig {
 class InjectedDependency {
   String type;
   String name;
-  String import;
   String paramName;
 
-  InjectedDependency({this.type, this.name, this.import, this.paramName});
+  InjectedDependency({this.type, this.name, this.paramName});
   InjectedDependency.fromJson(Map<String, dynamic> json) {
     name = json['name'];
     type = json['type'];
-    import = json['import'];
     paramName = json['paramName'];
   }
 
   Map<String, dynamic> toJson() => {
         "type": type,
-        "import": import,
         if (name != null) "name": name,
         if (paramName != null) "paramName": paramName,
       };
 }
 
 class RegisterModuleItem {
-  bool isAsync = false;
   bool isAbstract = false;
   String name;
   String moduleName;
@@ -88,7 +92,6 @@ class RegisterModuleItem {
   RegisterModuleItem();
 
   RegisterModuleItem.fromJson(Map<String, dynamic> json) {
-    isAsync = json['isAsync'] ?? false;
     isAbstract = json['isAbstract'] ?? false;
     name = json['name'];
     moduleName = json['moduleName'];
@@ -96,7 +99,6 @@ class RegisterModuleItem {
   }
 
   Map<String, dynamic> toJson() => {
-        'isAsync': isAsync,
         'isAbstract': isAbstract,
         'name': name,
         'moduleName': moduleName,

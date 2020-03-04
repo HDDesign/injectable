@@ -2,15 +2,19 @@
 import 'package:analyzer/dart/element/element.dart';
 
 String getImport(Element element) {
+  // prefer library source, because otherwise "part of"-files will lead to
+  // compile errors due to bad imports in the generated code
+  final source = element.librarySource ?? element.source;
+
   //return early if element has no source
-  if (element.source == null) {
+  if (source == null) {
     return null;
   }
 
   // we don't need to import core dart types
   // or core flutter types
-  if (!element.source.isInSystemLibrary) {
-    final path = element.source.uri.toString();
+  if (!source.isInSystemLibrary) {
+    final path = source.uri.toString();
 
     return path;
   }
@@ -46,3 +50,5 @@ void printBoxed(String message) {
   final pre = 'Injectable Generator ';
   print("${pre.padRight(71, '-')}\n\n$message\n${''.padRight(72, '-')} \n");
 }
+
+String stripGenericTypes(String type) => RegExp('^([^<]*)').stringMatch(type);
